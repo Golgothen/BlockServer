@@ -1,10 +1,9 @@
-import multiprocessing, logging, logging.config, pickle
+import multiprocessing, logging, logging.config
 from itertools import combinations
 from datetime import datetime, timedelta
 from vector import vector
 
 RECOMMENDED_CLIENT_BLOCK_SIZE = 4
-
 
 class Result():
     def __init__(self):
@@ -31,9 +30,11 @@ class Job():
         self.__allocated = {}
         self.__blockSize = 0
         self.__pickSize = 0
+        self.__totalBlocks = 0
         self.__maxWait = timedelta(7, 0, 0)
         self.__currentBest = Result()
         self.__currentMost = Result()
+        self.__block_iter = None
 
         for k, v in kwargs.items():
             if k.lower() == 'config':
@@ -51,44 +52,44 @@ class Job():
                 self.__pickSize = self.__game.minPick
             if self.__blockSize < (self.__pickSize - RECOMMENDED_CLIENT_BLOCK_SIZE):
                 self.__blockSize = self.__pickSize - RECOMMENDED_CLIENT_BLOCK_SIZE
+
             # Load the work que
-            for i in combinations(range(1,self.__game.poolSize + 1 - self.__blockSize),self.__blockSize):# - self.__pickSize):
+            for i in combinations(range(1,self.__game.poolSize + 1 - self.__blockSize),self.__blockSize):
                 self.__que.put(i)
+                self.__totalBlocks += 1
     
-    def restore(self, file):
-        self.logger.debug('Loading job file {}'.format(file))
-        with open(file,'rb') as f:
-            self.__game = pickle.load(f)
-            self.__allocated = pickle.load(f)
-            self.__blockSize = pickle.load(f)
-            self.__pickSize = pickle.load(f)
-            self.__maxWait = pickle.load(f)
-            self.__currentBest = pickle.load(f)
-            self.__currentMost = pickle.load(f)
-            while True:
-                try:
-                    self.__que.put(pickle.load(f))
-                except EOFError:
-                    break
-                except pickle.UnpicklingError:
-                    self.logger.error('Unexpected error loading job file {}'.format(file), exc_info = True, stack_info = True)
-                    return
-            self.logger.debug('Load Succesful.')
+    def __getstate__(self):
+        d = {}
+        d['game'] = self.__game
+        d['allocated'] = self.__allocated
+        d['block_size'] = self.__blockSize
+        d['pick_size'] = self.__pickSize
+        d['max_wait'] = self.__maxWait
+        d['total_blocks'] = self.__totalBlocks
+        d['current_best'] = self.__currentBest
+        d['current_most'] = self.__currentMost
+        d['block_que'] = []
+        while not self.__que.empty():
+            d['block_que'].append(self.__que.get())
+        return d
     
-    def save(self):
-        self.logger.debug('Saving job to file {}{}.dat'.format(type(self.__game).__name__,self.__pickSize))
-        with open('{}{}.dat'.format(type(self.__game).__name__,self.__pickSize),'wb') as f:
-            pickle.dump(self.__game,f)
-            pickle.dump(self.__allocated,f)
-            pickle.dump(self.__blockSize,f)
-            pickle.dump(self.__pickSize,f)
-            pickle.dump(self.__maxWait,f)
-            pickle.dump(self.__currentBest,f)
-            pickle.dump(self.__currentMost,f)
-            while not self.__que.empty():
-                pickle.dump(self.__que.get(),f)
-        self.logger.debug('Save Succesful.')
-        
+    def __setstate__(self, d):
+        self.__game = d['game']
+        self.__allocated = d['allocated']
+        self.__blockSize = d['block_size']
+        self.__pickSize = d['pick_size']
+        self.__maxWait = d['max_wait']
+        self.__totalBlocks = d['total_blocks']
+        self.__currentBest = d['current_best']
+        self.__currentMost = d['current_most']
+        self.__que = multiprocessing.Queue()
+        for b in d['block_que']:
+            self.__que.put(b)
+    
+    def setLogger(self, config):
+        logging.config.dictConfig(config)
+        self.logger = logging.getLogger(__name__)
+
     @property
     def isActive(self):
         if self.__que.qsize() > 0:
@@ -111,7 +112,7 @@ class Job():
             return block, self.__currentBest, self.__currentMost
         else:
             return None
-    
+
     def submit(self, block, bestResult, mostResult):
         self.logger.debug('Received block {}'.format(block))
         if block in self.__allocated:
@@ -134,6 +135,10 @@ class Job():
         for d in deletedBlocks:
             del self.__allocated[d]
         self.logger.debug('{} blocks currently allocated'.format(len(self.__allocated)))
+    
+    @property
+    def progressPercent(self):
+        return self.__que.qsize() / self.__totalBlocks * 100
     
     def purge(self):
         while not self.__que.empty():
