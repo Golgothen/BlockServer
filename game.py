@@ -35,6 +35,7 @@ class Lotto(Game):
         super().__init__(45)
         self.divisionWeights = vector([95000, 750, 100, 3, 2, 1])
         self.minPick = 6
+        self.maxPick = 20
         self.divisions = 6
     
     def load(self, filename, day = None):
@@ -85,6 +86,7 @@ class OzLotto(Game):
         super().__init__(45)
         self.divisionWeights = vector([680000, 1550, 200, 20, 3, 2, 1])
         self.minPick = 7
+        self.maxPick = 18
         self.divisions = 7
     
     def load(self, filename, day = None):
@@ -138,7 +140,7 @@ class PowerBall(Game):
         self.divisionWeights = vector([300000, 500, 20, 8, 2, 1])
         self.minPick = 7
         self.divisions = 6
-        self.powerball = 20
+        self.powerball = 18
     
     def load(self, filename, day = None):
         with open(filename) as f:

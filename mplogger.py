@@ -18,6 +18,9 @@ sender_config = {
         'job': {
             'level':       'DEBUG',
         },
+        'client': {
+            'level':       'DEBUG',
+        },
     },
     'root': {
         'level': 'INFO',
@@ -42,12 +45,12 @@ listener_config = {
     'handlers': {
         'console': {
             'class':       'logging.StreamHandler',
-            'level':       'ERROR',
+            #'level':       'DEBUG',
             'formatter':   'brief'
         },
         'file': {
             'class':       'logging.FileHandler',
-            'filename':    (datetime.now().strftime('%Y%m%d')+'.log'),
+            'filename':    '{}.log'.format(datetime.now().strftime('%Y%m%d')),
             'mode':        'a',
             'formatter':   'detailed',
         },

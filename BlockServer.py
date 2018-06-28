@@ -1,10 +1,10 @@
 from mplogger import *
 from game import *
-import multiprocessing, pickle
+import multiprocessing, pickle, socket
 from time import sleep
 from datetime import datetime
 from job import Job
-
+from client import Client
 
 
 if __name__ == '__main__':
@@ -22,31 +22,21 @@ if __name__ == '__main__':
     
     g = Lotto()
     g.load('lotto.csv')
-    t = datetime.now()
-    print('Creating first job')
-    j = Job(game = g, config = config, pick_size = 8)
-    print('Pulling {}'.format(j.get()))
-    print('Saving first job')
-    with open('Lotto8.dat','wb') as f:
-        pickle.dump(j, f)
-    del j
     
-    print('Loading first job')
-    with open('Lotto8.dat','rb') as f:
-        j = pickle.load(f)
-    j.setLogger(config)
     
-    print('Pulling {}'.format(j.get()))
-    print('Took {}'.format(datetime.now() - t))
-    j.purge()
 
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(('',2345))
+    try:
+        server.listen(5)
+        while True:
+            client = Client(config, server.accept(), g)
+            client.start()
+    except (KeyboardInterrupt, SystemExit):
+        print('Exiting')
+        
+        
     
     
     
-    #bl, b, m = j.get()
-    #logger.debug('Received block {}'.format(bl))
-    #b.divisions = vector([0,1,0,1,2,5])
-    #m.divisions = vector([0,1,4,8,12,15])
-    #j.submit(bl, b, m)
-    #j.purge()
     listener.stop()
