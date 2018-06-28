@@ -19,5 +19,6 @@ if __name__ == '__main__':
     c = Connection(config)
     c.connect('localhost',2345)
     c.send(Message('GET_DATA'))
-    g = c.recv()
+    m = c.recv()
+    g = m.params(['GAME'])
     

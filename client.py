@@ -1,5 +1,5 @@
 from mplogger import *
-import socket, threading, pickle
+import threading
 from connection import Connection
 
 class Client(threading.Thread):
@@ -19,14 +19,14 @@ class Client(threading.Thread):
         while True:
             # Will block here until data is received
             m = self.socket.recv()  # Returns a Message object
-            self.logger.error('Host {} sent {}'.format(self.host, m))
+            self.logger.debug('Host {} sent {}'.format(self.host, m))
             if m.message.upper() == 'GET_DATA':
-                self.socket.sendall(pickle.dumps(self.game))
+                self.socket.send(Message('GAME_DATA', GAME = self.game))
             if m.message.upper() == 'CLOSE':
                 break
             if m.message.upper() == 'CLIENT_INFO':
                 self.logger.debug('Client version is {}'.format(m.params['VERSION']))
-        self.logger.error('Closing connection with {}'.format(self.host))
+        self.logger.debug('Closing connection with {}'.format(self.host))
         self.socket.close()
         
         
