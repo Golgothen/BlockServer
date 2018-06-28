@@ -1,6 +1,6 @@
 from mplogger import *
 from game import *
-import multiprocessing, pickle, socket
+import multiprocessing, socket
 from time import sleep
 from datetime import datetime
 from job import Job

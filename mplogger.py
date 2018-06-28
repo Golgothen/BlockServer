@@ -21,6 +21,9 @@ sender_config = {
         'client': {
             'level':       'DEBUG',
         },
+        'connection': {
+            'level':       'DEBUG',
+        },
     },
     'root': {
         'level': 'INFO',
@@ -45,7 +48,7 @@ listener_config = {
     'handlers': {
         'console': {
             'class':       'logging.StreamHandler',
-            #'level':       'DEBUG',
+            'level':       'DEBUG',
             'formatter':   'brief'
         },
         'file': {

@@ -6,7 +6,7 @@ class Client(threading.Thread):
     def __init__(self, config, socket, game):
         super(Client, self).__init__()
         self.config = config
-        self.socket = Connection(socket[0])
+        self.socket = Connection(config, socket[0])
         self.address = socket[1]
         self.host = self.address[0]
         self.deamon = True
@@ -24,8 +24,8 @@ class Client(threading.Thread):
                 self.socket.sendall(pickle.dumps(self.game))
             if m.message.upper() == 'CLOSE':
                 break
-            if m.message.ipper() == 'CLIENT_INFO':
-                self.logger.error('Client version is {}'.format(m.params['VERSION']))
+            if m.message.upper() == 'CLIENT_INFO':
+                self.logger.debug('Client version is {}'.format(m.params['VERSION']))
         self.logger.error('Closing connection with {}'.format(self.host))
         self.socket.close()
         
