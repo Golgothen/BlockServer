@@ -1,6 +1,7 @@
 from mplogger import *
 import threading
 from connection import Connection
+from message import Message
 
 class Client(threading.Thread):
     def __init__(self, config, socket, game):
@@ -17,15 +18,18 @@ class Client(threading.Thread):
         self.logger = logging.getLogger(__name__)
         self.logger.debug('Connected to {} on port {}'.format(self.host, self.address[1]))
         while True:
+            self.logger.debug('Recv wait...')
             # Will block here until data is received
             m = self.socket.recv()  # Returns a Message object
             self.logger.debug('Host {} sent {}'.format(self.host, m))
             if m.message.upper() == 'GET_DATA':
                 self.socket.send(Message('GAME_DATA', GAME = self.game))
+                #break
             if m.message.upper() == 'CLOSE':
                 break
             if m.message.upper() == 'CLIENT_INFO':
                 self.logger.debug('Client version is {}'.format(m.params['VERSION']))
+                self.socket.send(Message('OK'))
         self.logger.debug('Closing connection with {}'.format(self.host))
         self.socket.close()
         

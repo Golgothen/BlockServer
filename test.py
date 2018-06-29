@@ -20,5 +20,8 @@ if __name__ == '__main__':
     c.connect('localhost',2345)
     c.send(Message('GET_DATA'))
     m = c.recv()
-    g = m.params(['GAME'])
+    g = m.params['GAME']
+    #c.close()
+    print(g.games)
+    listener.stop()
     
