@@ -16,10 +16,10 @@ sender_config = {
             'level':       'DEBUG',
         },
         'job': {
-            'level':       'DEBUG',
+            'level':       'INFO',
         },
         'client': {
-            'level':       'DEBUG',
+            'level':       'INFO',
         },
         'connection': {
             'level':       'INFO',

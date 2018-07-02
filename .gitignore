@@ -2,4 +2,5 @@
 /.pydevproject
 *.log
 *.dat
+*.txt
 /__pycache__/

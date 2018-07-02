@@ -4,14 +4,14 @@ from connection import Connection
 from message import Message
 
 class Client(threading.Thread):
-    def __init__(self, config, socket, job):
+    def __init__(self, config, socket, jobs):
         super(Client, self).__init__()
         self.config = config
         self.socket = Connection(config, socket[0])
         self.address = socket[1]
         self.host = self.address[0]
         self.deamon = True
-        self.job = job
+        self.jobs = jobs
     
     def run(self):
         logging.config.dictConfig(self.config)
@@ -23,16 +23,27 @@ class Client(threading.Thread):
             m = self.socket.recv()  # Returns a Message object
             self.logger.debug('Host {} sent {}'.format(self.host, m))
             if m.message.upper() == 'GET_DATA':
-                self.socket.send(Message('GAME_DATA', GAME = self.job.game))
+                self.socket.send(Message('GAME_DATA', GAME = self.jobs[m.params['GAMEID']].game))
             if m.message.upper() == 'GET_BLOCK':
-                bl, pick, best, most = self.job.get()
-                self.socket.send(Message('BLOCK_DATA', BLOCK = bl, PICK = pick, BEST = best, MOST = most, GAME = type(self.job.game).__name__))
+                for k, j in self.jobs.items():
+                    if j.isAvailable:
+                        bl, pick, best, most = j.get()
+                        self.socket.send(Message('BLOCK_DATA', BLOCK = bl, PICK = pick, BEST = best, MOST = most, GAME = type(j.game).__name__))
+                        j.recycle()
+                        if j.progressPercent > 95:
+                            if j.pickSize + 1 <= j.game.maxPick:
+                                self.jobs['{}{}'.format(type(j.game).__name__, j.pickSize+1)].prep()
+                        break
             if m.message.upper() == 'CLOSE':
                 break
             if m.message.upper() == 'CLIENT_INFO':
-                self.logger.debug('Client version is {}'.format(m.params['VERSION']))
+                self.logger.info('Client version is {}'.format(m.params['VERSION']))
                 self.socket.send(Message('OK'))
-            #if m.message.upper() == 'SUBMISSION':
+            if m.message.upper() == 'RESULT':
+                self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])].submit(m.params['RESULT_TYPE'], m.params['RESULT'])
+            if m.message.upper() == 'COMPLETE':
+                self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])].complete(m.params['BLOCK'], m.params['ELAPSED'], m.params['COMBINATIONS'], )
+                
                 
         self.logger.debug('Closing connection with {}'.format(self.host))
         self.socket.close()

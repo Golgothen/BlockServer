@@ -17,7 +17,9 @@ class Job():
         self.__maxWait = timedelta(7, 0, 0)
         self.__currentBest = Result()
         self.__currentMost = Result()
-        self.__block_iter = None
+        self.combinations = 0
+        self.elapsed = 0
+        #self.__block_iter = None
 
         for k, v in kwargs.items():
             if k.lower() == 'config':
@@ -36,10 +38,12 @@ class Job():
             if self.__blockSize < (self.__pickSize - RECOMMENDED_CLIENT_BLOCK_SIZE):
                 self.__blockSize = self.__pickSize - RECOMMENDED_CLIENT_BLOCK_SIZE
 
+    def prep(self):
             # Load the work que
             for i in combinations(range(1,self.__game.poolSize + 1 - self.__blockSize),self.__blockSize):
                 self.__que.put(i)
                 self.__totalBlocks += 1
+            self.logger.info('Loaded job {}{} with {} blocks'.format(type(self.__game).__name__, self.__pickSize, self.__totalBlocks))
     
     def __getstate__(self):
         d = {}
@@ -90,38 +94,62 @@ class Job():
     def get(self):
         if self.isAvailable:
             block = self.__que.get()
-            self.logger.debug('Returning block {}'.format(block))
+            self.logger.info('Returning block {}'.format(block))
             self.__allocated[block] = datetime.now()
             return block, self.__pickSize, self.__currentBest, self.__currentMost
         else:
             return None
 
-    def submit(self, block, bestResult, mostResult):
-        self.logger.debug('Received block {}'.format(block))
+        with open('{}-{}_{}.txt'.format(m.params['GAMEID'], m.params['PICK'], m.params['RESULT_TYPE']),'a') as f:
+            #if 'POWERBALL' in m.params:
+            #    f.write('Numbers = {} PB = {}, Divisions = {}, Weight = {}.\n'.format(m.params['NUMBERS'], m.params['POWERBALL'], m.params['DIVISIONS'], m.params['WEIGHT']))
+            #else:
+            f.write('Numbers = {}, Divisions = {}.\n'.format(m.params['RESULT'].numbers, m.params['RESULT'].divisions))
+
+
+
+
+    def submit(self, resultType, result):
+        if resultType == 'BEST':
+            if result > self.__currentBest:
+                self.logger.info('New BEST result set to {}'.format(result))
+                self.__currentBest = result
+        if resultType == 'MOST':
+            if result > self.__currentMost:
+                self.logger.info('New MOST result set to {}'.format(result))
+                self.__currentMost = result
+        with open('{}-{}_{}.txt'.format(type(self.__game).__name__, self.__pickSize, resultType),'a') as f:
+            #if 'POWERBALL' in m.params:
+            #    f.write('Numbers = {} PB = {}, Divisions = {}, Weight = {}.\n'.format(m.params['NUMBERS'], m.params['POWERBALL'], m.params['DIVISIONS'], m.params['WEIGHT']))
+            #else:
+            f.write('Numbers = {}, Divisions = {}.\n'.format(result.numbers, result.divisions))
+
+    def complete(self, block, elapsed, combinations):
+        self.logger.info('Completed block {} for job {}{}'.format(block, type(self.__game).__name__, self.__pickSize))
         if block in self.__allocated:
             self.logger.debug('Block {} found in allocated list. Deleting.'.format(block))
             del self.__allocated[block]
-        if bestResult > self.__currentBest:
-            self.logger.debug('New BEST result set to {}'.format(bestResult))
-            self.__currentBest = bestResult
-        if mostResult > self.__currentMost:
-            self.logger.debug('New MOST result set to {}'.format(mostResult))
-            self.__currentMost = mostResult
-        
+        self.combinations += combinations
+        self.elapsed += elapsed
+
     def recycle(self):
         deletedBlocks = []
-        for k, v in self.__allocated:
+        for k, v in self.__allocated.items():
             if (datetime.now() - v) > self.__maxWait:
                 self.logger.debug('Adding {} back to the work que')
                 self.__que.put(v)
                 deletedBlocks.append(k)
         for d in deletedBlocks:
             del self.__allocated[d]
-        self.logger.debug('{} blocks currently allocated'.format(len(self.__allocated)))
+        self.logger.info('{} blocks currently allocated'.format(len(self.__allocated)))
     
     @property
     def progressPercent(self):
-        return self.__que.qsize() / self.__totalBlocks * 100
+        return (1-(self.__que.qsize() / self.__totalBlocks)) * 100
+
+    @property
+    def stats(self):
+        return self.elapsed, self.combinations
     
     def purge(self):
         while not self.__que.empty():
@@ -130,3 +158,8 @@ class Job():
     @property
     def game(self):
         return self.__game
+    
+    @property
+    def pickSize(self):
+        return self.__pickSize
+    
