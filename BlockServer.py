@@ -45,9 +45,12 @@ if __name__ == '__main__':
         g.load('lotto.csv')
         
         for i in range(g.minPick, g.maxPick+1):
-            jobs['{}{}'.format(type(g).__name__, i)] = Job(config = config, game = g, pick = i)
+            jobs['{}{}'.format(type(g).__name__, i)] = Job(config = config, game = g, pick_size = i)
         
         jobs['{}{}'.format(type(g).__name__, g.minPick)].prep()
+
+    #for k, v in jobs.items():
+    #    print(k, v.pickSize)
     
     sp = Thread(target = listenerThread)
     sp.start()

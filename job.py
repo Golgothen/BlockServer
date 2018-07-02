@@ -100,15 +100,6 @@ class Job():
         else:
             return None
 
-        with open('{}-{}_{}.txt'.format(m.params['GAMEID'], m.params['PICK'], m.params['RESULT_TYPE']),'a') as f:
-            #if 'POWERBALL' in m.params:
-            #    f.write('Numbers = {} PB = {}, Divisions = {}, Weight = {}.\n'.format(m.params['NUMBERS'], m.params['POWERBALL'], m.params['DIVISIONS'], m.params['WEIGHT']))
-            #else:
-            f.write('Numbers = {}, Divisions = {}.\n'.format(m.params['RESULT'].numbers, m.params['RESULT'].divisions))
-
-
-
-
     def submit(self, resultType, result):
         if resultType == 'BEST':
             if result > self.__currentBest:

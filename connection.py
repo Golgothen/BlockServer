@@ -2,7 +2,7 @@ import socket, pickle
 from message import Message
 from mplogger import *
 
-BUFFER_SIZE = 8192
+BUFFER_SIZE = 1024
 SIZE_HEADER = 8
 BYTE_ORDER = 'big'
 
