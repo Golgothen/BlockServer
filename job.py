@@ -120,8 +120,8 @@ class Job():
         if block in self.__allocated:
             self.logger.debug('Block {} found in allocated list. Deleting.'.format(block))
             del self.__allocated[block]
-        self.combinations += combinations
-        self.elapsed += elapsed
+        #self.combinations += combinations
+        #self.elapsed += elapsed
 
     def recycle(self):
         deletedBlocks = []
