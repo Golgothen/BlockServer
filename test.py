@@ -2,6 +2,7 @@ from connection import Connection
 from message import Message
 from mplogger import *
 from multiprocessing import Queue
+from time import sleep
 
 if __name__ == '__main__':
     loggingQueue = Queue()
@@ -22,6 +23,14 @@ if __name__ == '__main__':
     m = c.recv()
     g = m.params['GAME']
     #c.close()
-    print(g.games)
+    for i in range(30):
+        #c.connect('localhost',2345)
+        c.send(Message('GET_BLOCK'))
+        print(c.recv())
+        #c.close()
+        #sleep(0.5)
+    c.close()
+    sleep(1)
+    #print(g.games)
     listener.stop()
     

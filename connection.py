@@ -30,7 +30,7 @@ class Connection():
         #    raise RuntimeError('Server reports incompatible client.')
     
     def send(self, data):
-        self.logger.debug('Sending {}'.format(data))
+        self.logger.info('Sending {}'.format(data))
         dump = pickle.dumps(data)
         size = len(dump).to_bytes(SIZE_HEADER, byteorder = BYTE_ORDER)
         self.logger.debug('Message size is {}'.format(len(dump)))
@@ -41,9 +41,10 @@ class Connection():
     
     def recv(self):
         data = self.socket.recv(SIZE_HEADER)
-        #if not data:
-        #    return(Message('CLOSE'))
         messageSize = int.from_bytes(data, byteorder = BYTE_ORDER)
+        if messageSize == 0:
+            self.close()
+            return(Message('CLOSE'))
         self.logger.debug('Message is {} bytes long'.format(messageSize))
         if messageSize <= BUFFER_SIZE:
             self.logger.debug('Pulling {} bytes from buffer'.format(messageSize))
@@ -65,7 +66,7 @@ class Connection():
         self.bytesReceived += (len(data) + SIZE_HEADER)
         self.logger.debug('{} total bytes received'.format(self.bytesReceived))
         d = pickle.loads(data)
-        self.logger.debug('Received: {}'.format(d))
+        self.logger.info('Received: {}'.format(d))
         return d
     
     def close(self):

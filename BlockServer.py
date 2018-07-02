@@ -23,6 +23,7 @@ if __name__ == '__main__':
     g = Lotto()
     g.load('lotto.csv')
     
+    currentJob = Job(config = config, game = g, pick_size = g.minPick)
     
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -30,10 +31,12 @@ if __name__ == '__main__':
     try:
         server.listen(5)
         while True:
-            client = Client(config, server.accept(), g)
+            client = Client(config, server.accept(), currentJob)
             client.start()
+            print('Progress: {:7.3f}'.format(currentJob.progressPercent))
     except (KeyboardInterrupt, SystemExit):
         print('Exiting')
+        
         
         
     

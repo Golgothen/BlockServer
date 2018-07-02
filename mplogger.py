@@ -22,7 +22,7 @@ sender_config = {
             'level':       'DEBUG',
         },
         'connection': {
-            'level':       'DEBUG',
+            'level':       'INFO',
         },
     },
     'root': {

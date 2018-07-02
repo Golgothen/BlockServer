@@ -2,27 +2,10 @@ import multiprocessing, logging, logging.config
 from itertools import combinations
 from datetime import datetime, timedelta
 from vector import vector
+from game import *
 
 RECOMMENDED_CLIENT_BLOCK_SIZE = 4
 
-class Result():
-    def __init__(self):
-        self.numbers = None
-        self.divisions = None
-    
-    def __gt__(self, r):
-        if self.divisions is None:
-            return False
-        if r.divisions is None:
-            return True
-        return sum(self.divisions) > sum(r.divisions)
-    
-    def __str__(self):
-        return 'Numbers: {}; Divisions: {}'.format(self.numbers, self.divisions)
-
-    def __repr__(self):
-        return str(self)
-        
 class Job():
     def __init__(self, *args, **kwargs):
         self.__game = None
@@ -109,7 +92,7 @@ class Job():
             block = self.__que.get()
             self.logger.debug('Returning block {}'.format(block))
             self.__allocated[block] = datetime.now()
-            return block, self.__currentBest, self.__currentMost
+            return block, self.__pickSize, self.__currentBest, self.__currentMost
         else:
             return None
 
@@ -143,3 +126,7 @@ class Job():
     def purge(self):
         while not self.__que.empty():
             self.__que.get()
+    
+    @property
+    def game(self):
+        return self.__game

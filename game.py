@@ -2,6 +2,30 @@ from datetime import datetime
 from vector import vector
 import csv
 
+class Result():
+    def __init__(self):
+        self.numbers = None
+        self.divisions = None
+    
+    def __gt__(self, r):
+        if self.divisions is None:
+            return False
+        if r.divisions is None:
+            return True
+        return sum(self.divisions) > sum(r.divisions)
+    
+    def __str__(self):
+        return 'Numbers: {}; Divisions: {}'.format(self.numbers, self.divisions)
+
+    def __repr__(self):
+        return str(self)
+    
+    def __mul__(self, x):
+        r = Result()
+        r.numbers = self.numbers
+        r.divisions = self.divisions * x
+        return r
+
 class Game():
     #
     # Base class for other game types
@@ -53,32 +77,32 @@ class Lotto(Game):
                     self.games.append(g)
     
     def play(self, numbers):
-        result = {}
-        result['Divisions'] = vector(self.divisions)
+        result = Result()
+        result.numbers = numbers
+        result.divisions = vector(self.divisions)
         for g in self.games:
             drawcount = 0
             supcount = 0
             drawcount=len(g['Numbers'].intersection(numbers))
             supcount=len(g['Sups'].intersection(numbers))
             if drawcount == 6:
-                result['Divisions'][0]+=1
+                result.division[0]+=1
                 continue
             if drawcount == 5:
                 if supcount > 0:
-                    result['Divisions'][1]+=1
+                    result.divisions[1]+=1
                     continue
                 else:
-                    result['Divisions'][2]+=1
+                    result.divisions[2]+=1
                     continue
             if drawcount == 4:
-                result['Divisions'][3]+=1
+                result.divisions[3]+=1
                 continue
             if drawcount == 3 and supcount > 0:
-                result['Divisions'][4]+=1
+                result.divisions[4]+=1
                 continue
             if drawcount > 0 and supcount == 2:
-                result['Divisions'][5]+=1
-        result['Weight'] = sum(result['Divisions']*self.divisionWeights)
+                result.divisions[5]+=1
         return result
 
 class OzLotto(Game):
