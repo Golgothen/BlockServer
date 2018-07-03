@@ -52,11 +52,11 @@ class Connection():
                 self.close()
                 raise
             self.connected = True
-            self.send(Message('CLIENT_INFO', VERSION = __version__))
-            m = self.recv()
-            if m.message != 'OK':
-                raise RuntimeError('Server reports incompatible client.')
-                self.close()
+            #self.send(Message('CLIENT_INFO', VERSION = __version__))
+            #m = self.recv()
+            #if m.message != 'OK':
+            #    raise RuntimeError('Server reports incompatible client.')
+            #    self.close()
     
     def send(self, data):
         if not self.connected:

@@ -94,7 +94,7 @@ class Job():
     def get(self):
         if self.isAvailable:
             block = self.__que.get()
-            self.logger.info('Returning block {}'.format(block))
+            self.logger.info('{}{}=========>>>{}'.format(type(self.__game).__name__, self.__pickSize, block))
             self.__allocated[block] = datetime.now()
             return block, self.__pickSize, self.__currentBest, self.__currentMost
         else:
@@ -103,11 +103,11 @@ class Job():
     def submit(self, resultType, result):
         if resultType == 'BEST':
             if result > self.__currentBest:
-                self.logger.info('New BEST result set to {}'.format(result))
+                self.logger.debug('New BEST result set to {}'.format(result))
                 self.__currentBest = result
         if resultType == 'MOST':
             if result > self.__currentMost:
-                self.logger.info('New MOST result set to {}'.format(result))
+                self.logger.debug('New MOST result set to {}'.format(result))
                 self.__currentMost = result
         with open('{}-{}_{}.txt'.format(type(self.__game).__name__, self.__pickSize, resultType),'a') as f:
             #if 'POWERBALL' in m.params:
@@ -116,7 +116,7 @@ class Job():
             f.write('Numbers = {}, Divisions = {}.\n'.format(result.numbers, result.divisions))
 
     def complete(self, block, elapsed, combinations):
-        self.logger.info('Completed block {} for job {}{}'.format(block, type(self.__game).__name__, self.__pickSize))
+        self.logger.info('{}{}<<<========={}'.format(type(self.__game).__name__, self.__pickSize, block))
         if block in self.__allocated:
             self.logger.debug('Block {} found in allocated list. Deleting.'.format(block))
             del self.__allocated[block]
@@ -132,7 +132,7 @@ class Job():
                 deletedBlocks.append(k)
         for d in deletedBlocks:
             del self.__allocated[d]
-        self.logger.info('{} blocks currently allocated'.format(len(self.__allocated)))
+        self.logger.debug('{} blocks currently allocated'.format(len(self.__allocated)))
     
     @property
     def progressPercent(self):

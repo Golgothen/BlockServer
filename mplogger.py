@@ -24,6 +24,9 @@ sender_config = {
         'connection': {
             'level':       'INFO',
         },
+        'pipewatcher': {
+            'level':       'DEBUG',
+        },
     },
     'root': {
         'level': 'INFO',

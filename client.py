@@ -43,7 +43,7 @@ class Client(threading.Thread):
             if m.message.upper() == 'CLOSE':
                 break
             if m.message.upper() == 'CLIENT_INFO':
-                self.logger.info('Client version is {}'.format(m.params['VERSION']))
+                self.logger.debug('Client version is {}'.format(m.params['VERSION']))
                 self.socket.send(Message('OK'))
             if m.message.upper() == 'RESULT':
                 self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])].submit(m.params['RESULT_TYPE'], m.params['RESULT'])
