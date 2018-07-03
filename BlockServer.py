@@ -15,7 +15,7 @@ if __name__ == '__main__':
     def listenerThread():
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind(('',LISTENING_PORT))
-        server.listen(5)
+        server.listen(50)
         while running:
             client = Client(config, server.accept(), jobs)
             client.start()
