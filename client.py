@@ -7,7 +7,7 @@ class Client(threading.Thread):
     def __init__(self, config, socket, jobs):
         super(Client, self).__init__()
         self.config = config
-        self.socket = Connection(config, socket[0])
+        self.socket = Connection(config = config, sock = socket[0])
         self.address = socket[1]
         self.host = self.address[0]
         self.deamon = True
@@ -20,7 +20,12 @@ class Client(threading.Thread):
         while True:
             self.logger.debug('Recv wait...')
             # Will block here until data is received
-            m = self.socket.recv()  # Returns a Message object
+            try:
+                m = self.socket.recv()  # Returns a Message object
+            except ConnectionResetError:
+                self.logger.error('Connection to {} was reset. Closing.'.format(self.host))
+                self.socket.close()
+                return
             self.logger.debug('Host {} sent {}'.format(self.host, m))
             if m.message.upper() == 'GET_DATA':
                 self.socket.send(Message('GAME_DATA', GAME = self.jobs[m.params['GAMEID']].game))
