@@ -157,4 +157,12 @@ class Job():
     @property
     def blocksRemaining(self):
         return self.__que.qsize() + len(self.__allocated)
+
+    @property
+    def blocksQueued(self):
+        return self.__que.qsize()
+    
+    @property
+    def blocksAllocated(self):
+        return len(self.__allocated)
     

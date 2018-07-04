@@ -54,6 +54,7 @@ if __name__ == '__main__':
     
     sp = Thread(target = listenerThread)
     sp.start()
+    
     try:
         while True:
             for j, v in jobs.items():
@@ -61,7 +62,7 @@ if __name__ == '__main__':
                 if not v.isAvailable:
                     v.recycle()
                 if v.isActive:
-                    print('Job: {} Progress: {:7.3f}%. {:12,.0f} blocks remaining'.format(j, v.progressPercent, v.blocksRemaining))
+                    print('Job: {} Progress: {:7.3f}%. {:9,.0f} blocks remaining. ({:9,.0f} queued, {:9,.0f} allocated)'.format(j, v.progressPercent, v.blocksRemaining, v.blocksQueued, v.blocksAllocated))
                     if v.progressPercent > NEXT_JOB_THRESHOLD:
                         if v.pickSize + 1 <= v.game.maxPick:
                             if not jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].isAvailable:
