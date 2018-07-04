@@ -8,7 +8,7 @@ from client import Client
 from threading import Thread
 
 LISTENING_PORT = 2345
-    
+NEXT_JOB_THRESHOLD = 75
 
 if __name__ == '__main__':
     running = True
@@ -56,9 +56,17 @@ if __name__ == '__main__':
     sp.start()
     try:
         while True:
-            for k, v in jobs.items():
+            for j, v in jobs.items():
+                #print(j)
+                if not v.isAvailable:
+                    v.recycle()
                 if v.isActive:
-                    print('Job: {} Progress: {:7.3f}%'.format(k, v.progressPercent))
+                    print('Job: {} Progress: {:7.3f}%. {:12,.0f} blocks remaining'.format(j, v.progressPercent, v.blocksRemaining))
+                    if v.progressPercent > NEXT_JOB_THRESHOLD:
+                        if v.pickSize + 1 <= v.game.maxPick:
+                            if not jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].isAvailable:
+                                jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].prep()
+                                break
             sleep(30)
     except (KeyboardInterrupt, SystemExit):
         running = False

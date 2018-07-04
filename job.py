@@ -14,7 +14,7 @@ class Job():
         self.__blockSize = 0
         self.__pickSize = 0
         self.__totalBlocks = 0
-        self.__maxWait = timedelta(7, 0, 0)
+        self.__maxWait = timedelta(1, 0, 0)
         self.__currentBest = Result()
         self.__currentMost = Result()
         self.combinations = 0
@@ -43,7 +43,7 @@ class Job():
             for i in combinations(range(1,self.__game.poolSize + 1 - self.__blockSize),self.__blockSize):
                 self.__que.put(i)
                 self.__totalBlocks += 1
-            self.logger.info('Loaded job {}{} with {} blocks'.format(type(self.__game).__name__, self.__pickSize, self.__totalBlocks))
+            self.logger.info('Loaded job {}{} with {:12,.0f} blocks'.format(type(self.__game).__name__, self.__pickSize, self.__totalBlocks))
     
     def __getstate__(self):
         d = {}
@@ -136,7 +136,7 @@ class Job():
     
     @property
     def progressPercent(self):
-        return (1-(self.__que.qsize() / self.__totalBlocks)) * 100
+        return (1-((self.__que.qsize() + len(self.__allocated)) / self.__totalBlocks)) * 100
 
     @property
     def stats(self):
@@ -153,4 +153,8 @@ class Job():
     @property
     def pickSize(self):
         return self.__pickSize
+    
+    @property
+    def blocksRemaining(self):
+        return self.__que.qsize() + len(self.__allocated)
     
