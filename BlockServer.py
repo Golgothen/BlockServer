@@ -77,10 +77,11 @@ if __name__ == '__main__':
             s.close()
         except:
             pass
-        print('Exiting')
+        print('Dumping data...')
         #sp.terminate()
         with open('server.dat','wb') as f:
             pickle.dump(jobs, f)
+        print('Data dump complete')
 
     listener.stop()
     

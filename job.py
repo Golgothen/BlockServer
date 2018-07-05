@@ -128,7 +128,7 @@ class Job():
         for k, v in self.__allocated.items():
             if (datetime.now() - v) > self.__maxWait:
                 self.logger.debug('Adding {} back to the work que')
-                self.__que.put(v)
+                self.__que.put(k)
                 deletedBlocks.append(k)
         for d in deletedBlocks:
             del self.__allocated[d]
