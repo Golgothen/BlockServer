@@ -6,9 +6,11 @@ from datetime import datetime
 from job import Job
 from client import Client
 from threading import Thread
+from copy import deepcopy
 
 LISTENING_PORT = 2345
 NEXT_JOB_THRESHOLD = 75
+CHECKPOINT_SAVE_MINUTES = 5
 
 if __name__ == '__main__':
     running = True
@@ -34,13 +36,33 @@ if __name__ == '__main__':
     logger = logging.getLogger('application')
     
     jobs = {}
+    success = False
     if os.path.isfile('server.dat'):
-        with open('server.dat','rb') as f:
-            jobs = pickle.load(f)
-        os.remove('server.dat')
-        for k, v in jobs.items():
-            v.setLogger(config)
-    else:
+        try:
+            with open('server.dat','rb') as f:
+                jobs = pickle.load(f)
+                success = True
+        except pickle.UnpicklingError:
+            logger.error('Error loading server.dat.', exc_info = True)
+            success = False
+        if success:
+            os.remove('server.dat')
+            for k, v in jobs.items():
+                v.setLogger(config)
+    if not success:
+        if os.path.isfile('checkpoint.dat'):
+            try:
+                with open('checkpoint.dat','rb') as f:
+                    jobs = pickle.load(f)
+                    success = True
+            except pickle.UnpicklingError:
+                logger.error('Error loading checkpoint.dat.', exc_info = True)
+                success = False
+            if success:
+                os.remove('checkpoint.dat')
+                for k, v in jobs.items():
+                    v.setLogger(config)
+    if not success:
         g = Lotto()
         g.load('lotto.csv')
         
@@ -49,16 +71,12 @@ if __name__ == '__main__':
         
         jobs['{}{}'.format(type(g).__name__, g.minPick)].prep()
 
-    #for k, v in jobs.items():
-    #    print(k, v.pickSize)
-    
     sp = Thread(target = listenerThread)
     sp.start()
-    
+    passCount = 0
     try:
         while True:
             for j, v in jobs.items():
-                #print(j)
                 if not v.isAvailable:
                     v.recycle()
                 if v.isActive:
@@ -68,7 +86,14 @@ if __name__ == '__main__':
                             if not jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].isAvailable:
                                 jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].prep()
                                 break
+            passCount+= 1
+            if passCount > CHECKPOINT_SAVE_MINUTES * 2:
+                with open('checkpoint.dat','wb') as f:
+                    pickle.dump(deepcopy(jobs), f)
+                print('Checkpoint saved')
+                passCount = 0
             sleep(30)
+            
     except (KeyboardInterrupt, SystemExit):
         running = False
         try:
@@ -78,10 +103,8 @@ if __name__ == '__main__':
         except:
             pass
         print('Dumping data...')
-        #sp.terminate()
         with open('server.dat','wb') as f:
             pickle.dump(jobs, f)
         print('Data dump complete')
-
     listener.stop()
     
