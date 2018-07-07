@@ -86,12 +86,12 @@ if __name__ == '__main__':
                             if not jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].isAvailable:
                                 jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].prep()
                                 break
-            passCount+= 1
-            if passCount > CHECKPOINT_SAVE_MINUTES * 2:
-                with open('checkpoint.dat','wb') as f:
-                    pickle.dump(deepcopy(jobs), f)
-                print('Checkpoint saved')
-                passCount = 0
+            #passCount+= 1
+            #if passCount > CHECKPOINT_SAVE_MINUTES * 2:
+            #    with open('checkpoint.dat','wb') as f:
+            #        pickle.dump(deepcopy(jobs), f)
+            #    print('Checkpoint saved')
+            #    passCount = 0
             sleep(30)
             
     except (KeyboardInterrupt, SystemExit):
