@@ -142,11 +142,11 @@ class Job():
             while True:
                 block = self.que.get()
                 if block in self.returnUnallocated:
-                    #self.logger.info('Block {} already submitted'.format(block))
+                    self.logger.info('Block {} already submitted'.format(block))
                     del self.returnUnallocated[self.returnUnallocated.index(block)]
                 else:
                     break
-            #self.logger.info('{}{}=========>>>{}'.format(type(self.game).__name__, self.pickSize, block))
+            self.logger.info('{}{}=========>>>{}'.format(type(self.game).__name__, self.pickSize, block))
             self.allocated[block] = datetime.now()
             return block, self.pickSize, self.currentBest, self.currentMost
         else:
