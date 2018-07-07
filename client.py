@@ -44,7 +44,11 @@ class Client(threading.Thread):
                 self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])].submit(m.params['RESULT_TYPE'], m.params['RESULT'])
             if m.message.upper() == 'COMPLETE':
                 self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])].complete(m.params['BLOCK'], m.params['ELAPSED'], m.params['COMBINATIONS'], )
-                
+            if m.message.upper() == 'FLUSH':
+                self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])].flush()
+            if m.message.upper() == 'RESTART':
+                self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])].prep()
+            
                 
         self.logger.debug('Closing connection with {}'.format(self.host))
         self.socket.close()

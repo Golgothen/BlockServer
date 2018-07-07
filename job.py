@@ -44,6 +44,13 @@ class Job():
 
     def prep(self):
             # Load the work que
+            self.totalBlocks = 0
+            self.returnUnallocated = []
+            self.allocated = {}
+            self.currentBest = Result()
+            self.currentMost = Result()
+            self.combinations = 0
+            self.elapsed = 0
             for i in combinations(range(1,self.game.poolSize + 1 - self.blockSize),self.blockSize):
                 self.que.put(i)
                 self.totalBlocks += 1
@@ -157,15 +164,20 @@ class Job():
             if result > self.currentBest:
                 self.logger.debug('New BEST result set to {}'.format(result))
                 self.currentBest = result
+                with open('{}-{}_{}.txt'.format(type(self.game).__name__, self.pickSize, resultType),'a') as f:
+                    #if 'POWERBALL' in m.params:
+                    #    f.write('Numbers = {} PB = {}, Divisions = {}, Weight = {}.\n'.format(m.params['NUMBERS'], m.params['POWERBALL'], m.params['DIVISIONS'], m.params['WEIGHT']))
+                    #else:
+                    f.write('Numbers = {}, Divisions = {}.\n'.format(result.numbers, result.divisions))
         if resultType == 'MOST':
             if result > self.currentMost:
                 self.logger.debug('New MOST result set to {}'.format(result))
                 self.currentMost = result
-        with open('{}-{}_{}.txt'.format(type(self.game).__name__, self.pickSize, resultType),'a') as f:
-            #if 'POWERBALL' in m.params:
-            #    f.write('Numbers = {} PB = {}, Divisions = {}, Weight = {}.\n'.format(m.params['NUMBERS'], m.params['POWERBALL'], m.params['DIVISIONS'], m.params['WEIGHT']))
-            #else:
-            f.write('Numbers = {}, Divisions = {}.\n'.format(result.numbers, result.divisions))
+                with open('{}-{}_{}.txt'.format(type(self.game).__name__, self.pickSize, resultType),'a') as f:
+                    #if 'POWERBALL' in m.params:
+                    #    f.write('Numbers = {} PB = {}, Divisions = {}, Weight = {}.\n'.format(m.params['NUMBERS'], m.params['POWERBALL'], m.params['DIVISIONS'], m.params['WEIGHT']))
+                    #else:
+                    f.write('Numbers = {}, Divisions = {}.\n'.format(result.numbers, result.divisions))
 
     def complete(self, block, elapsed, combinations):
         self.logger.info('{}{}<<<========={}'.format(type(self.game).__name__, self.pickSize, block))
@@ -185,6 +197,16 @@ class Job():
                 self.logger.debug('Adding {} back to the work que')
                 self.que.put(k)
                 deletedBlocks.append(k)
+        for d in deletedBlocks:
+            del self.allocated[d]
+        self.logger.debug('{} blocks currently allocated'.format(len(self.allocated)))
+
+    def flush(self):
+        deletedBlocks = []
+        for k in self.allocated.items():
+            self.logger.debug('Adding {} back to the work que')
+            self.que.put(k)
+            deletedBlocks.append(k)
         for d in deletedBlocks:
             del self.allocated[d]
         self.logger.debug('{} blocks currently allocated'.format(len(self.allocated)))
