@@ -80,6 +80,7 @@ class Connection():
         try:
             data = self.socket.recv(SIZE_HEADER)
         except:
+            self.close()
             raise
         messageSize = int.from_bytes(data, byteorder = BYTE_ORDER)
         if messageSize == 0:
@@ -120,6 +121,7 @@ class Connection():
         try:
             d = pickle.loads(data)
         except:
+            self.close()
             raise
         self.logger.debug('Received: {}'.format(d))
         return d

@@ -80,18 +80,18 @@ if __name__ == '__main__':
                 if not v.isAvailable:
                     v.recycle()
                 if v.isActive:
-                    print('Job: {} Progress: {:7.3f}%. {:9,.0f} blocks remaining. ({:9,.0f} queued, {:9,.0f} allocated)'.format(j, v.progressPercent, v.blocksRemaining, v.blocksQueued, v.blocksAllocated))
+                    print('Job: {:<10} Progress: {:7.3f}%. {:15,.0f} blocks remaining. ({:15,.0f} queued, {:15,.0f} allocated)'.format(j, v.progressPercent, v.blocksRemaining, v.blocksQueued, v.blocksAllocated))
                     if v.progressPercent > NEXT_JOB_THRESHOLD:
                         if v.pickSize + 1 <= v.game.maxPick:
                             if not jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].isAvailable:
                                 jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].prep()
                                 break
-            #passCount+= 1
-            #if passCount > CHECKPOINT_SAVE_MINUTES * 2:
-            #    with open('checkpoint.dat','wb') as f:
-            #        pickle.dump(deepcopy(jobs), f)
-            #    print('Checkpoint saved')
-            #    passCount = 0
+            passCount+= 1
+            if passCount > CHECKPOINT_SAVE_MINUTES * 2:
+                with open('checkpoint.dat','wb') as f:
+                    pickle.dump(deepcopy(jobs), f)
+                print('Checkpoint saved')
+                passCount = 0
             sleep(30)
             
     except (KeyboardInterrupt, SystemExit):

@@ -4,3 +4,4 @@
 *.dat
 *.txt
 /__pycache__/
+/server.bak
