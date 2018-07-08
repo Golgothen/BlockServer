@@ -9,7 +9,7 @@ from threading import Thread
 from copy import deepcopy
 
 LISTENING_PORT = 2345
-NEXT_JOB_THRESHOLD = 75
+NEXT_JOB_THRESHOLD = 20
 CHECKPOINT_SAVE_MINUTES = 5
 
 if __name__ == '__main__':

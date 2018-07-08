@@ -22,7 +22,7 @@ class Client(threading.Thread):
             # Will block here until data is received
             try:
                 m = self.socket.recv()  # Returns a Message object
-            except ConnectionResetError:
+            except (ConnectionResetError, ConnectionAbortedError):
                 self.logger.error('Connection to {} was reset. Closing.'.format(self.host))
                 self.socket.close()
                 return

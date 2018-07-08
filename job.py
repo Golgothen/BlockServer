@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from vector import vector
 from game import *
 
-RECOMMENDED_CLIENT_BLOCK_SIZE = 4
+RECOMMENDED_CLIENT_BLOCK_SIZE = 5
 
 class Job():
     def __init__(self, *args, **kwargs):
