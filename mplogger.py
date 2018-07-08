@@ -60,14 +60,14 @@ listener_config = {
             'mode':        'a',
             'formatter':   'detailed',
         },
-        #'filerotate': {
-        #    'class':       'logging.handlers.TimedRotatingFileHandler',
-        #    'filename':    'run.log',
-        #    'when':        'midnight',
-        #    'interval':    1,
-        #    'formatter':   'detailed',
-        #    'backupCount': 10
-        #}
+        'filerotate': {
+            'class':       'logging.handlers.TimedRotatingFileHandler',
+            'filename':    'server.log',
+            'when':        'midnight',
+            'interval':    1,
+            'formatter':   'detailed',
+            'backupCount': 10
+        }
     },
     'root': {
         'handlers':    ['console', 'file'],

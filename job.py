@@ -185,7 +185,7 @@ class Job():
             self.logger.debug('Block {} found in allocated list. Deleting.'.format(block))
             del self.allocated[block]
         else:
-            self.logger.debug('Block {} not allocated'.format(block))
+            self.logger.info('Block {} not allocated'.format(block))
             self.returnUnallocated.append(block)
         self.combinations += combinations
         self.elapsed += elapsed
@@ -203,8 +203,8 @@ class Job():
 
     def flush(self):
         deletedBlocks = []
-        for k in self.allocated.items():
-            self.logger.debug('Adding {} back to the work que')
+        for k, v in self.allocated.items():
+            self.logger.info('Adding {} back to the work que')
             self.que.put(k)
             deletedBlocks.append(k)
         for d in deletedBlocks:
