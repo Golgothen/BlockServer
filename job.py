@@ -11,9 +11,10 @@ class Job():
     def __init__(self, *args, **kwargs):
         self.game = None
         self.config = None
-        self.que = multiprocessing.Queue()
+        #self.que = multiprocessing.Queue()
         self.allocated = {}
         self.returnUnallocated = []
+        self.recycledBlocks = []
         self.blockSize = 0
         self.pickSize = 0
         self.totalBlocks = 0
@@ -22,7 +23,9 @@ class Job():
         self.currentMost = Result()
         self.combinations = 0
         self.elapsed = 0
+        self.completedCount = 0
         self.paused = False
+        self.isAvailable = False
         #self.block_iter = None
 
         for k, v in kwargs.items():
@@ -43,19 +46,28 @@ class Job():
             if self.blockSize < (self.pickSize - RECOMMENDED_CLIENT_BLOCK_SIZE):
                 self.blockSize = self.pickSize - RECOMMENDED_CLIENT_BLOCK_SIZE
 
-    def prep(self):
-            # Load the work que
-            self.totalBlocks = 0
-            self.returnUnallocated = []
-            self.allocated = {}
-            self.currentBest = Result()
-            self.currentMost = Result()
-            self.combinations = 0
-            self.elapsed = 0
-            for i in combinations(range(1,self.game.poolSize + 1 - self.blockSize),self.blockSize):
-                self.que.put(i)
-                self.totalBlocks += 1
-            self.logger.info('Loaded job {}{} with {:12,.0f} blocks'.format(type(self.game).__name__, self.pickSize, self.totalBlocks))
+        fn = self.game.poolSize - self.blockSize
+        for i in range(1,self.game.poolSize - self.blockSize):
+            fn *= i
+        fr = self.pickSize
+        for i in range(1,self.pickSize):
+            fr *= i
+        fd = self.game.poolSize - self.blockSize - self.pickSize
+        for i in range(1, self.game.poolSize - self.pickSize):
+            fd *= i
+         
+        self.totalBlocks = fn/(fr*fd)
+        
+        self.returnUnallocated = []
+        self.allocated = {}
+        self.currentBest = Result()
+        self.currentMost = Result()
+        self.combinations = 0
+        self.elapsed = 0
+        self.lastBlock = 0
+        self.iter = combinations(range(1,self.game.poolSize + 1 - self.blockSize),self.blockSize)
+        self.logger.info('Loaded job {}{} with {:12,.0f} blocks'.format(type(self.game).__name__, self.pickSize, self.totalBlocks))
+        self.isAvailable = True
     
     def __getstate__(self):
         d = {}
@@ -70,13 +82,10 @@ class Job():
         d['total_blocks'] = self.totalBlocks
         d['current_best'] = self.currentBest
         d['current_most'] = self.currentMost
-        d['block_que'] = []
-        while not self.que.empty():
-            d['block_que'].append(self.que.get())
+        d['last_block'] = self.lastBlock
         return d
     
     def __setstate__(self, d):
-        self.que = multiprocessing.Queue()
         self.paused = False
         self.game = d['game']
         self.allocated = d['allocated']
@@ -98,31 +107,15 @@ class Job():
         self.totalBlocks = d['total_blocks']
         self.currentBest = d['current_best']
         self.currentMost = d['current_most']
-        for b in d['block_que']:
-            self.que.put(b)
-    
-    def __deepcopy__(self, memo):
-        #print('Copy of Job')
-        d = type(self)(config = self.config, game = self.game, pick_size = self.pickSize)
-        d.allocated = self.allocated.copy()
-        d.returnUnallocated = self.returnUnallocated.copy()
-        d.blockSize = self.blockSize
-        d.maxWait = self.maxWait
-        d.totalBlocks = self.totalBlocks
-        d.currentBest = self.currentBest
-        d.currentMost = self.currentMost
-        d.elapsed = self.elapsed
-        d.combinations = self.combinations
-        #self.paused = True
-        self.que.put(None)
+        self.lastBlock = d['last_block']
+        self.iter = combinations(range(1,self.game.poolSize + 1 - self.blockSize),self.blockSize)
         while True:
-            b = self.que.get()
-            if b is None:
+            try:
+                if next(self.iter) == self.lastBlock:
+                    break
+            except StopIteration:
+                self.isAvailable = False
                 break
-            d.que.put(b)
-            self.que.put(b)
-        self.paused = False
-        return d
         
     def setLogger(self, config):
         self.config = config
@@ -131,34 +124,25 @@ class Job():
 
     @property
     def isActive(self):
-        if self.que.qsize() > 0:
-            return True
-        if len(self.allocated) > 0:
-            return True
-        return False
-    
-    @property
-    def isAvailable(self):
-        if self.que.qsize() > 0:
+        if len(self.allocated) > 0 and self.isAvailable:
             return True
         return False
     
     def get(self):
-        if self.isAvailable:
-            while self.paused:
-                sleep(0.1)
-            while True:
-                block = self.que.get()
+        while True:
+            try:
+                block = next(self.iter)
                 if block in self.returnUnallocated:
                     self.logger.info('Block {} already submitted'.format(block))
                     del self.returnUnallocated[self.returnUnallocated.index(block)]
                 else:
                     break
-            self.logger.info('{}{}=========>>>{}'.format(type(self.game).__name__, self.pickSize, block))
-            self.allocated[block] = datetime.now()
-            return block, self.pickSize, self.currentBest, self.currentMost
-        else:
-            return None
+            except StopIter:
+                self.isAvailable = False
+                return None
+        self.logger.info('{}{}=========>>>{}'.format(type(self.game).__name__, self.pickSize, block))
+        self.allocated[block] = datetime.now()
+        return block, self.pickSize, self.currentBest, self.currentMost
 
     def submit(self, resultType, result):
         if resultType == 'BEST':
@@ -185,54 +169,44 @@ class Job():
         if block in self.allocated:
             self.logger.debug('Block {} found in allocated list. Deleting.'.format(block))
             del self.allocated[block]
+            self.completedCount += 1
         else:
             self.logger.info('Block {} not allocated'.format(block))
             self.returnUnallocated.append(block)
+            self.completedCount += 1
         self.combinations += combinations
         self.elapsed += elapsed
 
     def recycle(self):
-        deletedBlocks = []
         for k, v in self.allocated.items():
             if (datetime.now() - v) > self.maxWait:
                 self.logger.debug('Adding {} back to the work que'.format(k))
-                self.que.put(k)
-                deletedBlocks.append(k)
-        for d in deletedBlocks:
+                self.recycledBlocks.append(k)
+        for d in self.recycledBlocks:
             del self.allocated[d]
         self.logger.debug('{} blocks currently allocated'.format(len(self.allocated)))
 
     def flush(self):
-        deletedBlocks = []
         for k, v in self.allocated.items():
             if type(k).__name__ == 'tuple':
                 self.logger.info('Adding {} back to the work que'.format(k))
-                self.que.put(k)
-            deletedBlocks.append(k)
-        for d in deletedBlocks:
+                self.recycledBlocks.append(k)
+        for d in self.recycledBlocks:
             del self.allocated[d]
         self.logger.debug('{} blocks currently allocated'.format(len(self.allocated)))
     
     @property
     def progressPercent(self):
-        return (1-((self.que.qsize() - len(self.returnUnallocated) + len(self.allocated)) / self.totalBlocks)) * 100
+        return (1-(self.completedCount / self.totalBlocks)) * 100
 
     @property
     def stats(self):
         return self.elapsed, self.combinations
     
-    def purge(self):
-        while not self.que.empty():
-            self.que.get()
-    
     @property
     def blocksRemaining(self):
-        return self.que.qsize() + len(self.allocated)
+        return self.totalBlocks - self.completedCount
 
-    @property
-    def blocksQueued(self):
-        return self.que.qsize()
-    
     @property
     def blocksAllocated(self):
         return len(self.allocated)

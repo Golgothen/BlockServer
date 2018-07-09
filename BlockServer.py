@@ -68,8 +68,6 @@ if __name__ == '__main__':
         
         for i in range(g.minPick, g.maxPick+1):
             jobs['{}{}'.format(type(g).__name__, i)] = Job(config = config, game = g, pick_size = i)
-        
-        jobs['{}{}'.format(type(g).__name__, g.minPick)].prep()
 
     sp = Thread(target = listenerThread)
     sp.start()
@@ -81,11 +79,18 @@ if __name__ == '__main__':
                     v.recycle()
                 if v.isActive:
                     print('Job: {:<10} Progress: {:7.3f}%. {:15,.0f} blocks remaining. ({:15,.0f} queued, {:15,.0f} allocated)'.format(j, v.progressPercent, v.blocksRemaining, v.blocksQueued, v.blocksAllocated))
-                    if v.progressPercent > NEXT_JOB_THRESHOLD:
-                        if v.pickSize + 1 <= v.game.maxPick:
-                            if not jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].isAvailable:
-                                jobs['{}{}'.format(type(v.game).__name__, v.pickSize+1)].prep()
-                                break
+                workAvailable = False
+                for k, w in jobs.items():
+                    if k == j:
+                        continue
+                    if w.isActive and w.progressPercent < NEXT_JOB_THRESHOLD:
+                        workAvailable = True
+                        break
+            if not workAvailable:
+                for k, v in jobs.items():
+                    if v.totalBlocks == 0:
+                        v.prep()
+                        break
             #passCount+= 1
             #if passCount > CHECKPOINT_SAVE_MINUTES * 2:
             #    with open('checkpoint.dat','wb') as f:
