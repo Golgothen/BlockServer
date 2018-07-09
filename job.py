@@ -3,6 +3,7 @@ from itertools import combinations
 from datetime import datetime, timedelta
 from vector import vector
 from game import *
+from time import sleep
 
 RECOMMENDED_CLIENT_BLOCK_SIZE = 5
 
@@ -194,7 +195,7 @@ class Job():
         deletedBlocks = []
         for k, v in self.allocated.items():
             if (datetime.now() - v) > self.maxWait:
-                self.logger.debug('Adding {} back to the work que')
+                self.logger.debug('Adding {} back to the work que'.format(k))
                 self.que.put(k)
                 deletedBlocks.append(k)
         for d in deletedBlocks:
@@ -204,8 +205,9 @@ class Job():
     def flush(self):
         deletedBlocks = []
         for k, v in self.allocated.items():
-            self.logger.info('Adding {} back to the work que')
-            self.que.put(k)
+            if type(k).__name__ == 'tuple':
+                self.logger.info('Adding {} back to the work que'.format(k))
+                self.que.put(k)
             deletedBlocks.append(k)
         for d in deletedBlocks:
             del self.allocated[d]
