@@ -91,12 +91,6 @@ if __name__ == '__main__':
                     if v.totalBlocks == 0:
                         v.prep()
                         break
-            #passCount+= 1
-            #if passCount > CHECKPOINT_SAVE_MINUTES * 2:
-            #    with open('checkpoint.dat','wb') as f:
-            #        pickle.dump(deepcopy(jobs), f)
-            #    print('Checkpoint saved')
-            #    passCount = 0
             sleep(30)
             
     except (KeyboardInterrupt, SystemExit):
