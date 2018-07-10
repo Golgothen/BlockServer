@@ -5,7 +5,7 @@ from vector import vector
 from game import *
 from time import sleep
 
-RECOMMENDED_CLIENT_BLOCK_SIZE = 4
+RECOMMENDED_CLIENT_BLOCK_SIZE = 3
 
 class Job():
     def __init__(self, *args, **kwargs):
@@ -66,7 +66,7 @@ class Job():
         self.elapsed = 0
         self.lastBlock = None
         self.iter = combinations(range(1,self.game.poolSize + 1 - self.blockSize),self.blockSize)
-        self.logger.info('Loaded job {}{} with {:12,.0f} blocks'.format(type(self.game).__name__, self.pickSize, self.totalBlocks))
+        #self.logger.info('Loaded job {}{} with {:12,.0f} blocks'.format(type(self.game).__name__, self.pickSize, self.totalBlocks))
         self.isAvailable = True
     
     def __getstate__(self):
@@ -74,6 +74,7 @@ class Job():
         d['game'] = self.game
         d['allocated'] = self.allocated
         d['returnUnallocated'] = self.returnUnallocated
+        d['recycled_blocks'] = self.recycledBlocks
         d['block_size'] = self.blockSize
         d['combinations'] = self.combinations
         d['elapsed'] = self.elapsed
@@ -84,6 +85,7 @@ class Job():
         d['current_most'] = self.currentMost
         d['last_block'] = self.lastBlock
         d['is_available'] = self.isAvailable
+        d['completed_blocks'] = self.completedBlocks
 
         return d
     
@@ -92,6 +94,7 @@ class Job():
         self.game = d['game']
         self.allocated = d['allocated']
         self.returnUnallocated = d['returnUnallocated']
+        self.recycledBlocks = d['recycled_blocks']
         self.blockSize = d['block_size']
         self.combinations = d['combinations']
         self.elapsed = d['elapsed']
@@ -102,16 +105,20 @@ class Job():
         self.currentMost = d['current_most']
         self.lastBlock = d['last_block']
         self.isAvailable = d['is_available']
+        self.completedBlocks = d['completed_blocks']
         self.iter = combinations(range(1,self.game.poolSize + 1 - self.blockSize),self.blockSize)
+        #c = 0
         if self.lastBlock is not None: 
             while True:
                 try:
                     if next(self.iter) == self.lastBlock:
                         break
+                    #c += 1
                 except StopIteration:
                     self.isAvailable = False
                     break
-        
+        #self.logger.info('Job {}{} fast forward {} blocks'.format(type(self.game).__name__, self.pickSize, c))
+
     def setLogger(self, config):
         self.config = config
         logging.config.dictConfig(config)
@@ -137,6 +144,7 @@ class Job():
                 return None
         self.logger.info('{}{}=========>>>{}'.format(type(self.game).__name__, self.pickSize, block))
         self.allocated[block] = datetime.now()
+        self.lastBlock = block
         return block, self.pickSize, self.currentBest, self.currentMost
 
     def submit(self, resultType, result):

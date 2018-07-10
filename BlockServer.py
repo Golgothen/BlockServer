@@ -78,19 +78,14 @@ if __name__ == '__main__':
                 if not v.isAvailable:
                     v.recycle()
                 if v.isActive:
-                    print('Job: {:<10} Progress: {:7.3f}%. {:15,.0f} blocks remaining. ({:15,.0f} queued, {:15,.0f} allocated)'.format(j, v.progressPercent, v.blocksRemaining, v.blocksQueued, v.blocksAllocated))
-                workAvailable = False
-                for k, w in jobs.items():
-                    if k == j:
-                        continue
-                    if w.isActive and w.progressPercent < NEXT_JOB_THRESHOLD:
-                        workAvailable = True
-                        break
-            if not workAvailable:
-                for k, v in jobs.items():
-                    if v.totalBlocks == 0:
-                        v.prep()
-                        break
+                    if v.progressPercent > 0:
+                        print('Job: {:<8} Progress: {:7.3f}%. {:11.0f} completed, {:11,.0f} remaining. ({:5,.0f} alloc, {:5,.0f} rec, {:5,.0f} precomp)'.format(j, v.progressPercent, v.completedBlocks, v.blocksRemaining, v.blocksAllocated, len(v.recycledBlocks), len(v.returnUnallocated)))
+            passCount += 1
+            if passCount > CHECKPOINT_SAVE_MINUTES * 2:
+                with open('checkpoint.dat','wb') as f:
+                    pickle.dump(jobs, f)
+                print('Checkpoint file saved')
+                passCount = 0
             sleep(30)
             
     except (KeyboardInterrupt, SystemExit):
