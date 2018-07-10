@@ -70,6 +70,7 @@ if __name__ == '__main__':
             jobs['{}{}'.format(type(g).__name__, i)] = Job(config = config, game = g, pick_size = i)
 
     sp = Thread(target = listenerThread)
+    sp.daemon = True
     sp.start()
     passCount = 0
     try:
@@ -78,7 +79,7 @@ if __name__ == '__main__':
                 if not v.isAvailable:
                     v.recycle()
                 if v.isActive:
-                    if v.progressPercent > 0:
+                    if v.progressPercent > 0 or v.completedBlocks > 0 or v.blocksAllocated > 0 or len(v.recycledBlocks) > 0:
                         print('Job: {:<8} Progress: {:7.3f}%. {:11.0f} completed, {:11,.0f} remaining. ({:5,.0f} alloc, {:5,.0f} rec, {:5,.0f} precomp)'.format(j, v.progressPercent, v.completedBlocks, v.blocksRemaining, v.blocksAllocated, len(v.recycledBlocks), len(v.returnUnallocated)))
             passCount += 1
             if passCount > CHECKPOINT_SAVE_MINUTES * 2:

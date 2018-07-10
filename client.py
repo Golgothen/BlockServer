@@ -33,6 +33,8 @@ class Client(threading.Thread):
                 for k, j in self.jobs.items():
                     if j.isAvailable:
                         bl, pick, best, most = j.get()
+                        if bl is None:
+                            continue
                         self.socket.send(Message('BLOCK_DATA', BLOCK = bl, PICK = pick, BEST = best, MOST = most, GAME = type(j.game).__name__))
                         break
             if m.message.upper() == 'CLOSE':

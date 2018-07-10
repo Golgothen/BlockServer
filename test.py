@@ -1,8 +1,16 @@
-from job import Job
-from game import *
+from message import Message
+from mplogger import *
+from connection import Connection
 
-g = Lotto()
-g.load('lotto.csv')
-j = Job(game = g, pick_size = 6)
-j.prep()
-    
+c = Connection(host = 'localhost', port = 2345, config = listener_config)
+
+def completeBlocks(n):
+    for i in range(n):
+        c.send(Message('GET_BLOCK'))
+        b = c.recv()
+        c.send(Message('COMPLETE', BLOCK = b.params['BLOCK'], GAMEID = b.params['GAME'], PICK = b.params['PICK'], ELAPSED = 0, COMBINATIONS = 0))
+
+def getBlocks(n):
+    for i in range(n):
+        c.send(Message('GET_BLOCK'))
+        b = c.recv()
