@@ -80,7 +80,7 @@ if __name__ == '__main__':
                     v.recycle()
                 if v.isActive:
                     if v.progressPercent > 0 or v.completedBlocks > 0 or v.blocksAllocated > 0 or len(v.recycledBlocks) > 0:
-                        print('Job: {:<8} Progress: {:7.3f}%. {:11.0f} completed, {:11,.0f} remaining. ({:5,.0f} alloc, {:5,.0f} rec, {:5,.0f} precomp)'.format(j, v.progressPercent, v.completedBlocks, v.blocksRemaining, v.blocksAllocated, len(v.recycledBlocks), len(v.returnUnallocated)))
+                        print('Job: {:<8} Progress: {:7.3f}%. {:11,.0f} completed, {:11,.0f} remaining. ({:5,.0f} alloc, {:5,.0f} rec, {:5,.0f} precomp)'.format(j, v.progressPercent, v.completedBlocks, v.blocksRemaining, v.blocksAllocated, len(v.recycledBlocks), len(v.returnUnallocated)))
             passCount += 1
             if passCount > CHECKPOINT_SAVE_MINUTES * 2:
                 with open('checkpoint.dat','wb') as f:

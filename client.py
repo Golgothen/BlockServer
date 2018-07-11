@@ -2,6 +2,7 @@ from mplogger import *
 import threading
 from connection import Connection
 from message import Message
+from job import Job
 
 class Client(threading.Thread):
     def __init__(self, config, socket, jobs):
@@ -49,7 +50,7 @@ class Client(threading.Thread):
             if m.message.upper() == 'FLUSH':
                 self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])].flush()
             if m.message.upper() == 'RESTART':
-                self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])].prep()
+                self.jobs['{}{}'.format(m.params['GAMEID'], m.params['PICK'])] = Job(config = self.config, game = m.params['GAME'], block_size = m.params['BLOCKSIZE'], pick_size = m.params['PICK'])
             
                 
         self.logger.debug('Closing connection with {}'.format(self.host))
