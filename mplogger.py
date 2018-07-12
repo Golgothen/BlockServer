@@ -54,23 +54,24 @@ listener_config = {
             'level':       'DEBUG',
             'formatter':   'brief'
         },
-        'file': {
-            'class':       'logging.FileHandler',
-            'filename':    '{}.log'.format(datetime.now().strftime('%Y%m%d')),
-            'mode':        'a',
-            'formatter':   'detailed',
-        },
+        #'file': {
+        #    'class':       'logging.FileHandler',
+        #    'filename':    '{}.log'.format(datetime.now().strftime('%Y%m%d')),
+        #    'mode':        'a',
+        #    'formatter':   'detailed',
+        #},
         'filerotate': {
             'class':       'logging.handlers.TimedRotatingFileHandler',
             'filename':    'server.log',
             'when':        'midnight',
             'interval':    1,
             'formatter':   'detailed',
+            'level':       'ERROR',
             'backupCount': 10
         }
     },
     'root': {
-        'handlers':    ['console', 'file'],
+        'handlers':    ['console', 'filerotate'],
     },
 }
 
