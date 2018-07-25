@@ -5,7 +5,7 @@ from vector import vector
 from game import *
 from time import sleep
 
-RECOMMENDED_CLIENT_BLOCK_SIZE = 4
+RECOMMENDED_CLIENT_BLOCK_SIZE = 5
 
 class Job():
     def __init__(self, *args, **kwargs):

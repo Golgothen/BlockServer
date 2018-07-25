@@ -64,9 +64,9 @@ if __name__ == '__main__':
                     v.setLogger(config)
     if not success:
         g = Lotto()
-        g.load('lotto.csv')
+        g.load('lotto.csv', day = ['SAT'])
         
-        for i in range(g.minPick, g.maxPick+1):
+        for i in range(10, g.maxPick+1):
             jobs['{}{}'.format(type(g).__name__, i)] = Job(config = config, game = g, pick_size = i)
 
     sp = Thread(target = listenerThread)
