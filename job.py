@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from vector import vector
 from game import *
 from time import sleep
+from math import factorial
 
 RECOMMENDED_CLIENT_BLOCK_SIZE = 5
 
@@ -17,7 +18,7 @@ class Job():
         self.recycledBlocks = []
         self.blockSize = 0
         self.pickSize = 0
-        self.totalBlocks = 0
+        #self.totalBlocks = 0
         self.maxWait = timedelta(1, 0, 0)
         self.currentBest = Result()
         self.currentMost = Result()
@@ -46,17 +47,17 @@ class Job():
             if self.blockSize < (self.pickSize - RECOMMENDED_CLIENT_BLOCK_SIZE):
                 self.blockSize = self.pickSize - RECOMMENDED_CLIENT_BLOCK_SIZE
 
-        fn = self.game.poolSize - self.blockSize
-        for i in range(1,self.game.poolSize - self.blockSize):
-            fn *= i
-        fr = self.blockSize
-        for i in range(1,self.blockSize):
-            fr *= i
-        fd = self.game.poolSize - (2 * self.blockSize)
-        for i in range(1, self.game.poolSize - (2 * self.blockSize)):
-            fd *= i
-         
-        self.totalBlocks = fn/(fr*fd)
+        #fn = self.game.poolSize - self.blockSize
+        #for i in range(1,self.game.poolSize - self.blockSize):
+        #    fn *= i
+        #fr = self.blockSize
+        #for i in range(1,self.blockSize):
+        #    fr *= i
+        #fd = self.game.poolSize - (2 * self.blockSize)
+        #for i in range(1, self.game.poolSize - (2 * self.blockSize)):
+        #    fd *= i
+        # 
+        #self.totalBlocks = fn/(fr*fd)
         
         self.returnUnallocated = []
         self.allocated = {}
@@ -65,7 +66,7 @@ class Job():
         self.combinations = 0
         self.elapsed = 0
         self.lastBlock = None
-        self.iter = combinations(range(1,self.game.poolSize + 1 - self.blockSize),self.blockSize)
+        self.iter = combinations(range(1,self.game.poolSize + 1 - (RECOMMENDED_CLIENT_BLOCK_SIZE)),self.blockSize)
         #self.logger.info('Loaded job {}{} with {:12,.0f} blocks'.format(type(self.game).__name__, self.pickSize, self.totalBlocks))
         self.iterAvailable = True
     
@@ -80,7 +81,7 @@ class Job():
         d['elapsed'] = self.elapsed
         d['pick_size'] = self.pickSize
         d['max_wait'] = self.maxWait
-        d['total_blocks'] = self.totalBlocks
+        #d['total_blocks'] = self.totalBlocks
         d['current_best'] = self.currentBest
         d['current_most'] = self.currentMost
         d['last_block'] = self.lastBlock
@@ -100,7 +101,7 @@ class Job():
         self.elapsed = d['elapsed']
         self.pickSize = d['pick_size']
         self.maxWait = d['max_wait']
-        self.totalBlocks = d['total_blocks']
+        #self.totalBlocks = d['total_blocks']
         self.currentBest = d['current_best']
         self.currentMost = d['current_most']
         self.lastBlock = d['last_block']
@@ -212,7 +213,7 @@ class Job():
     
     @property
     def progressPercent(self):
-        return (self.completedBlocks / self.totalBlocks) * 100
+        return (self.completedBlocks / self.size) * 100
 
     @property
     def stats(self):
@@ -220,9 +221,12 @@ class Job():
     
     @property
     def blocksRemaining(self):
-        return self.totalBlocks - self.completedBlocks
+        return self.size - self.completedBlocks
 
     @property
     def blocksAllocated(self):
         return len(self.allocated)
     
+    @property
+    def size(self):
+        return factorial(self.game.poolSize - RECOMMENDED_CLIENT_BLOCK_SIZE)/(factorial(self.blockSize)*factorial(self.game.poolSize - RECOMMENDED_CLIENT_BLOCK_SIZE - self.blockSize))
